@@ -4,16 +4,16 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
 
-# Load the models
+# Load Models
 models = joblib.load("models.pkl")
 scaler = StandardScaler()
 imputer = SimpleImputer(strategy='mean')
 
-# Streamlit Web App
+# Streamlit UI
 st.title("Disease Prediction System")
 st.write("Predict Chronic Diseases like CKD, Diabetes, Hypertension, and Anemia")
 
-# Input Fields
+# User Inputs
 age = st.number_input("Enter your age:", min_value=1, max_value=120, value=30)
 bp = st.number_input("Enter your blood pressure:", min_value=50, max_value=200, value=120)
 bgr = st.number_input("Enter your glucose level:", min_value=50, max_value=300, value=100)
@@ -21,7 +21,7 @@ bu = st.number_input("Enter your blood urea:", min_value=10, max_value=200, valu
 sc = st.number_input("Enter your serum creatinine:", min_value=0.1, max_value=20.0, value=1.2)
 hemo = st.number_input("Enter your hemoglobin:", min_value=5.0, max_value=20.0, value=13.5)
 
-# Prediction
+# Predict Button
 if st.button("Predict"):
     user_input = pd.DataFrame([[age, bp, bgr, bu, sc, hemo]], 
                               columns=['age', 'bp', 'bgr', 'bu', 'sc', 'hemo'])
