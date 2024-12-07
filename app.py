@@ -72,33 +72,33 @@ if st.button("Predict"):
         # Display Results on Streamlit
         st.subheader("Prediction Results:")
 
-        if ckd_prediction[0] == 1 or ann_prediction >= 0.5:
+        if ckd_rf_prediction[0] == 1 or ckd_ann_prediction >= 0.5:
             st.error("You may have Chronic Kidney Disease (CKD).")
-            st.info(f"CKD Model Prediction Value: {ckd_prediction[0]} | Keras ANN: {ann_prediction:.4f}")
+            st.info(f"CKD Model Prediction Value: {ckd_rf_prediction[0]} | Keras ANN: {ckd_ann_prediction:.4f}")
         else:
             st.success("You are less likely to have Chronic Kidney Disease (CKD).")
-            st.info(f"CKD Model Prediction Value: {ckd_prediction[0]} | Keras ANN: {ann_prediction:.4f}")
+            st.info(f"CKD Model Prediction Value: {ckd_rf_prediction[0]} | Keras ANN: {ckd_ann_prediction:.4f}")
 
-        if diabetes_prediction[0] == 1:
+        if diabetes_rf_prediction[0] == 1:
             st.error("You may have Diabetes.")
-            st.info(f"Diabetes Model Prediction Value: {diabetes_prediction[0]}")
+            st.info(f"Diabetes Model Prediction Value: {diabetes_rf_prediction[0]}")
         else:
             st.success("You are less likely to have Diabetes.")
-            st.info(f"Diabetes Model Prediction Value: {diabetes_prediction[0]}")
+            st.info(f"Diabetes Model Prediction Value: {diabetes_rf_prediction[0]}")
 
-        if htn_prediction[0] == 1:
+        if htn_rf_prediction[0] == 1:
             st.error("You may have Hypertension.")
-            st.info(f"Hypertension Model Prediction Value: {htn_prediction[0]}")
+            st.info(f"Hypertension Model Prediction Value: {htn_rf_prediction[0]}")
         else:
             st.success("You are less likely to have Hypertension.")
-            st.info(f"Hypertension Model Prediction Value: {htn_prediction[0]}")
+            st.info(f"Hypertension Model Prediction Value: {htn_rf_prediction[0]}")
 
-        if ane_prediction[0] == 1:
+        if ane_rf_prediction[0] == 1:
             st.error("You may have Anemia.")
-            st.info(f"Anemia Model Prediction Value: {ane_prediction[0]}")
+            st.info(f"Anemia Model Prediction Value: {ane_rf_prediction[0]}")
         else:
             st.success("You are less likely to have Anemia.")
-            st.info(f"Anemia Model Prediction Value: {ane_prediction[0]}")
+            st.info(f"Anemia Model Prediction Value: {ane_rf_prediction[0]}")
 
         logging.info("Prediction completed successfully.")
     
