@@ -1,7 +1,7 @@
 streamlit
+pandas
+numpy
 scikit-learn
 tensorflow
-pandas
-joblib
 xgboost
-numpy
+joblib
