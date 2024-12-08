@@ -4,15 +4,11 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
-from sklearn.preprocessing import StandardScaler
-from sklearn.impute import SimpleImputer
 
-# Load Models
+# Load Models, Imputer, and Scaler
 models = joblib.load("best_models.pkl")
-
-# Load Scaler and Imputer
-scaler = StandardScaler()
-imputer = SimpleImputer(strategy='mean')
+imputer = joblib.load("imputer.pkl")
+scaler = joblib.load("scaler.pkl")
 
 # Title and Description
 st.title("Disease Prediction App")
@@ -45,7 +41,7 @@ def get_user_input():
 # Predict Function
 def predict_diseases(models, user_input):
     user_input_imputed = imputer.transform(user_input)
-    user_input_scaled = scaler.fit_transform(user_input_imputed)
+    user_input_scaled = scaler.transform(user_input_imputed)
 
     ckd_rf_prediction = models['Random Forest'].predict(user_input_scaled)
     ckd_ann_prediction = models['Keras ANN'].predict(user_input_scaled)[0][0]
