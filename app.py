@@ -7,8 +7,48 @@ from sklearn.impute import SimpleImputer
 
 # Load Models
 models = joblib.load("models.pkl")
-scaler = StandardScaler()
+
+# Load the datasets
+kidney_disease_df = pd.read_csv('kidney_disease.csv')
+diabetes_df = pd.read_csv('diabetes.csv')
+
+# Preprocess Data
+def preprocess_data():
+    kidney_disease_df.fillna({
+        'age': kidney_disease_df['age'].median(),
+        'bp': kidney_disease_df['bp'].median(),
+        'bgr': kidney_disease_df['bgr'].median(),
+        'bu': kidney_disease_df['bu'].median(),
+        'sc': kidney_disease_df['sc'].median(),
+        'hemo': kidney_disease_df['hemo'].median(),
+        'htn': kidney_disease_df['htn'].mode()[0],
+        'ane': kidney_disease_df['ane'].mode()[0],
+    }, inplace=True)
+
+    kidney_disease_df['htn'] = kidney_disease_df['bp'].apply(lambda x: 1 if x > 130 else 0)
+    kidney_disease_df['ane'] = kidney_disease_df['ane'].apply(lambda x: 1 if x == 'yes' else 0)
+    kidney_disease_df['classification'] = kidney_disease_df['classification'].apply(lambda x: 1 if x == 'ckd' else 0)
+
+    combined_df = pd.concat([
+        kidney_disease_df[['age', 'bp', 'bgr', 'bu', 'sc', 'hemo', 'htn', 'ane', 'classification']].rename(columns={'classification': 'ckd'}),
+        diabetes_df[['Age', 'BloodPressure', 'Glucose', 'BMI', 'Outcome']].rename(columns={'Age': 'age', 'BloodPressure': 'bp', 'Glucose': 'bgr', 'Outcome': 'diabetes'})
+    ], axis=0, ignore_index=True)
+
+    return combined_df
+
+def split_data(df):
+    X = df[['age', 'bp', 'bgr', 'bu', 'sc', 'hemo']]
+    return X
+
+# Preprocess and fit imputer and scaler
+combined_df = preprocess_data()
+X = split_data(combined_df)
+
 imputer = SimpleImputer(strategy='mean')
+scaler = StandardScaler()
+
+X_imputed = imputer.fit_transform(X)
+X_scaled = scaler.fit_transform(X_imputed)
 
 # Streamlit Interface
 st.title("Disease Prediction System")
@@ -26,7 +66,7 @@ if st.button("Predict"):
                               columns=['age', 'bp', 'bgr', 'bu', 'sc', 'hemo'])
 
     user_input_imputed = imputer.transform(user_input)
-    user_input_scaled = scaler.fit_transform(user_input_imputed)
+    user_input_scaled = scaler.transform(user_input_imputed)
 
     # Predictions
     ckd_prediction = models['Random Forest'].predict(user_input_scaled)
