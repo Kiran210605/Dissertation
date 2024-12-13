@@ -8,12 +8,8 @@ from sklearn.impute import SimpleImputer
 # Load Models
 models = joblib.load("models.pkl")
 
-# Load the datasets
-kidney_disease_df = pd.read_csv('kidney_disease.csv')
-diabetes_df = pd.read_csv('diabetes.csv')
-
-# Preprocess Data
-def preprocess_data():
+# Preprocess Data Function
+def preprocess_data(kidney_disease_df, diabetes_df):
     kidney_disease_df.fillna({
         'age': kidney_disease_df['age'].median(),
         'bp': kidney_disease_df['bp'].median(),
@@ -36,24 +32,18 @@ def preprocess_data():
 
     return combined_df
 
-def split_data(df):
-    X = df[['age', 'bp', 'bgr', 'bu', 'sc', 'hemo']]
-    return X
+# Load Datasets
+@st.cache_data
+def load_data():
+    kidney_disease_df = pd.read_csv('kidney_disease.csv')
+    diabetes_df = pd.read_csv('diabetes.csv')
+    return kidney_disease_df, diabetes_df
 
-# Preprocess and fit imputer and scaler
-combined_df = preprocess_data()
-X = split_data(combined_df)
-
-imputer = SimpleImputer(strategy='mean')
-scaler = StandardScaler()
-
-X_imputed = imputer.fit_transform(X)
-X_scaled = scaler.fit_transform(X_imputed)
-
-# Streamlit Interface
+# Streamlit App
 st.title("Disease Prediction System")
 st.header("Enter Your Medical Details")
 
+# User Input
 age = st.number_input("Enter your age:", min_value=0, max_value=120, value=30)
 bp = st.number_input("Enter your blood pressure:", min_value=0, max_value=200, value=120)
 bgr = st.number_input("Enter your glucose level:", min_value=0, max_value=300, value=100)
@@ -62,6 +52,19 @@ sc = st.number_input("Enter your serum creatinine:", min_value=0.0, max_value=20
 hemo = st.number_input("Enter your hemoglobin:", min_value=0.0, max_value=20.0, value=13.5)
 
 if st.button("Predict"):
+    kidney_disease_df, diabetes_df = load_data()
+    combined_df = preprocess_data(kidney_disease_df, diabetes_df)
+
+    X = combined_df[['age', 'bp', 'bgr', 'bu', 'sc', 'hemo']]
+    
+    # Initialize and Fit Imputer & Scaler
+    imputer = SimpleImputer(strategy='mean')
+    scaler = StandardScaler()
+
+    X_imputed = imputer.fit_transform(X)
+    X_scaled = scaler.fit_transform(X_imputed)
+
+    # Prepare User Input
     user_input = pd.DataFrame([[age, bp, bgr, bu, sc, hemo]],
                               columns=['age', 'bp', 'bgr', 'bu', 'sc', 'hemo'])
 
