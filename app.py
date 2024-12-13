@@ -5,9 +5,11 @@ import joblib
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
 
-# Streamlit Cache for Persistent Fitting
-@st.cache_resource
-def load_and_fit():
+# Load Models
+models = joblib.load("models.pkl")
+
+# Ensure Imputer and Scaler Are Fitted
+def fit_and_save_resources():
     kidney_disease_df = pd.read_csv('kidney_disease.csv')
     diabetes_df = pd.read_csv('diabetes.csv')
 
@@ -23,12 +25,10 @@ def load_and_fit():
         'ane': kidney_disease_df['ane'].mode()[0],
     }, inplace=True)
 
-    kidney_disease_df['htn'] = kidney_disease_df['bp'].apply(lambda x: 1 if x > 130 else 0)
-    kidney_disease_df['ane'] = kidney_disease_df['ane'].apply(lambda x: 1 if x == 'yes' else 0)
     kidney_disease_df['classification'] = kidney_disease_df['classification'].apply(lambda x: 1 if x == 'ckd' else 0)
 
     combined_df = pd.concat([
-        kidney_disease_df[['age', 'bp', 'bgr', 'bu', 'sc', 'hemo', 'htn', 'ane', 'classification']].rename(columns={'classification': 'ckd'}),
+        kidney_disease_df[['age', 'bp', 'bgr', 'bu', 'sc', 'hemo', 'classification']].rename(columns={'classification': 'ckd'}),
         diabetes_df[['Age', 'BloodPressure', 'Glucose', 'BMI', 'Outcome']].rename(columns={'Age': 'age', 'BloodPressure': 'bp', 'Glucose': 'bgr', 'Outcome': 'diabetes'})
     ], axis=0, ignore_index=True)
 
@@ -40,11 +40,17 @@ def load_and_fit():
     X_imputed = imputer.fit_transform(X)
     scaler.fit(X_imputed)
 
-    return imputer, scaler
+    joblib.dump(imputer, "imputer.pkl")
+    joblib.dump(scaler, "scaler.pkl")
 
-# Load models and preprocessors
-models = joblib.load("models.pkl")
-imputer, scaler = load_and_fit()
+# Ensure Files Are Available
+try:
+    imputer = joblib.load("imputer.pkl")
+    scaler = joblib.load("scaler.pkl")
+except FileNotFoundError:
+    fit_and_save_resources()
+    imputer = joblib.load("imputer.pkl")
+    scaler = joblib.load("scaler.pkl")
 
 # Streamlit App
 st.title("Disease Prediction System")
