@@ -32,12 +32,26 @@ def preprocess_data(kidney_disease_df, diabetes_df):
 
     return combined_df
 
-# Load Datasets
-@st.cache_data
-def load_data():
+# Load Data and Fit Imputer & Scaler
+@st.cache_resource
+def load_data_and_fit():
     kidney_disease_df = pd.read_csv('kidney_disease.csv')
     diabetes_df = pd.read_csv('diabetes.csv')
-    return kidney_disease_df, diabetes_df
+
+    combined_df = preprocess_data(kidney_disease_df, diabetes_df)
+    X = combined_df[['age', 'bp', 'bgr', 'bu', 'sc', 'hemo']]
+
+    # Initialize and fit imputer and scaler
+    imputer = SimpleImputer(strategy='mean')
+    scaler = StandardScaler()
+
+    X_imputed = imputer.fit_transform(X)
+    X_scaled = scaler.fit_transform(X_imputed)
+
+    return imputer, scaler, X_scaled
+
+# Load resources
+imputer, scaler, X_scaled = load_data_and_fit()
 
 # Streamlit App
 st.title("Disease Prediction System")
@@ -52,18 +66,6 @@ sc = st.number_input("Enter your serum creatinine:", min_value=0.0, max_value=20
 hemo = st.number_input("Enter your hemoglobin:", min_value=0.0, max_value=20.0, value=13.5)
 
 if st.button("Predict"):
-    kidney_disease_df, diabetes_df = load_data()
-    combined_df = preprocess_data(kidney_disease_df, diabetes_df)
-
-    X = combined_df[['age', 'bp', 'bgr', 'bu', 'sc', 'hemo']]
-    
-    # Initialize and Fit Imputer & Scaler
-    imputer = SimpleImputer(strategy='mean')
-    scaler = StandardScaler()
-
-    X_imputed = imputer.fit_transform(X)
-    X_scaled = scaler.fit_transform(X_imputed)
-
     # Prepare User Input
     user_input = pd.DataFrame([[age, bp, bgr, bu, sc, hemo]],
                               columns=['age', 'bp', 'bgr', 'bu', 'sc', 'hemo'])
