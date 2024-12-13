@@ -5,11 +5,13 @@ import joblib
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
 
-# Load Models
-models = joblib.load("models.pkl")
+# Streamlit Cache for Persistent Fitting
+@st.cache_resource
+def load_and_fit():
+    kidney_disease_df = pd.read_csv('kidney_disease.csv')
+    diabetes_df = pd.read_csv('diabetes.csv')
 
-# Preprocess Data Function
-def preprocess_data(kidney_disease_df, diabetes_df):
+    # Preprocess Data
     kidney_disease_df.fillna({
         'age': kidney_disease_df['age'].median(),
         'bp': kidney_disease_df['bp'].median(),
@@ -30,28 +32,19 @@ def preprocess_data(kidney_disease_df, diabetes_df):
         diabetes_df[['Age', 'BloodPressure', 'Glucose', 'BMI', 'Outcome']].rename(columns={'Age': 'age', 'BloodPressure': 'bp', 'Glucose': 'bgr', 'Outcome': 'diabetes'})
     ], axis=0, ignore_index=True)
 
-    return combined_df
-
-# Load Data and Fit Imputer & Scaler
-@st.cache_resource
-def load_data_and_fit():
-    kidney_disease_df = pd.read_csv('kidney_disease.csv')
-    diabetes_df = pd.read_csv('diabetes.csv')
-
-    combined_df = preprocess_data(kidney_disease_df, diabetes_df)
     X = combined_df[['age', 'bp', 'bgr', 'bu', 'sc', 'hemo']]
 
-    # Initialize and fit imputer and scaler
     imputer = SimpleImputer(strategy='mean')
     scaler = StandardScaler()
 
     X_imputed = imputer.fit_transform(X)
-    X_scaled = scaler.fit_transform(X_imputed)
+    scaler.fit(X_imputed)
 
-    return imputer, scaler, X_scaled
+    return imputer, scaler
 
-# Load resources
-imputer, scaler, X_scaled = load_data_and_fit()
+# Load models and preprocessors
+models = joblib.load("models.pkl")
+imputer, scaler = load_and_fit()
 
 # Streamlit App
 st.title("Disease Prediction System")
