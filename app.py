@@ -1,48 +1,59 @@
+# app.py
+
 import streamlit as st
 import pandas as pd
-import joblib
 import numpy as np
+import joblib
+from sklearn.preprocessing import StandardScaler
+from sklearn.impute import SimpleImputer
+import warnings
+warnings.filterwarnings("ignore")
 
-# Load Models
-models = joblib.load("models/best_models.pkl")
-imputer = joblib.load("models/imputer.pkl")
-scaler = joblib.load("models/scaler.pkl")
+# Load Models and Scalers
+models = joblib.load("best_models.pkl")
+imputer = SimpleImputer(strategy='mean')
+scaler = StandardScaler()
 
-# App Title
-st.title("Chronic Kidney Disease & Diabetes Prediction")
+# Streamlit App
+st.title("Medical Disease Prediction App")
 
-# User Input
-st.header("Enter Your Medical Information")
+st.sidebar.header("Enter Your Medical Details")
+age = st.sidebar.number_input("Enter your age", min_value=0, max_value=120, value=25, step=1)
+bp = st.sidebar.number_input("Enter your blood pressure", min_value=0, max_value=250, value=120, step=1)
+bgr = st.sidebar.number_input("Enter your glucose level", min_value=0, max_value=500, value=100, step=1)
+bu = st.sidebar.number_input("Enter your blood urea", min_value=0, max_value=300, value=40, step=1)
+sc = st.sidebar.number_input("Enter your serum creatinine", min_value=0.0, max_value=10.0, value=1.2, step=0.1)
+hemo = st.sidebar.number_input("Enter your hemoglobin", min_value=0.0, max_value=20.0, value=13.5, step=0.1)
 
-age = st.number_input("Age", min_value=1, max_value=120, step=1)
-bp = st.number_input("Blood Pressure (BP)", min_value=50, max_value=200, step=1)
-bgr = st.number_input("Blood Glucose Random (BGR)", min_value=50, max_value=300, step=1)
-bu = st.number_input("Blood Urea (BU)", min_value=1.0, max_value=200.0, step=0.1)
-sc = st.number_input("Serum Creatinine (SC)", min_value=0.1, max_value=15.0, step=0.1)
-hemo = st.number_input("Hemoglobin (Hemo)", min_value=3.0, max_value=20.0, step=0.1)
+# Make Predictions
+user_input = pd.DataFrame([[age, bp, bgr, bu, sc, hemo]], 
+                          columns=['age', 'bp', 'bgr', 'bu', 'sc', 'hemo'])
+user_input_imputed = imputer.fit_transform(user_input)
+user_input_scaled = scaler.fit_transform(user_input_imputed)
 
-# Prediction Button
-if st.button("Predict"):
-    user_data = pd.DataFrame([[age, bp, bgr, bu, sc, hemo]], 
-                             columns=['age', 'bp', 'bgr', 'bu', 'sc', 'hemo'])
+st.header("Predictions Based on Your Symptoms")
 
-    # Preprocess Input
-    user_data_imputed = imputer.transform(user_data)
-    user_data_scaled = scaler.transform(user_data_imputed)
+# Predictions
+ckd_rf_prediction = models['Random Forest'].predict(user_input_scaled)
+diabetes_rf_prediction = models['Random Forest'].predict(user_input_scaled)
+ckd_ann_prediction = models['Keras ANN'].predict(user_input_scaled)[0][0]
 
-    # Predictions
-    ckd_prediction = models['Random Forest'].predict(user_data_scaled)
-    diabetes_prediction = models['Random Forest'].predict(user_data_scaled)
-    ann_prediction = models['Keras ANN'].predict(user_data_scaled)[0][0]
+if ckd_rf_prediction[0] == 1 or ckd_ann_prediction >= 0.5:
+    st.warning("You may have Chronic Kidney Disease (CKD).")
+else:
+    st.success("You are less likely to have Chronic Kidney Disease (CKD).")
 
-    st.header("Prediction Results")
-    
-    if ckd_prediction[0] == 1 or ann_prediction >= 0.5:
-        st.error("You may have Chronic Kidney Disease (CKD).")
-    else:
-        st.success("You are less likely to have CKD.")
+if diabetes_rf_prediction[0] == 1:
+    st.warning("You may have Diabetes.")
+else:
+    st.success("You are less likely to have Diabetes.")
 
-    if diabetes_prediction[0] == 1:
-        st.error("You may have Diabetes.")
-    else:
-        st.success("You are less likely to have Diabetes.")
+if ckd_rf_prediction[0] == 1:
+    st.warning("You may have Hypertension (High Blood Pressure).")
+else:
+    st.success("You are less likely to have Hypertension (High Blood Pressure).")
+
+if ckd_rf_prediction[0] == 1:
+    st.warning("You may have Anemia.")
+else:
+    st.success("You are less likely to have Anemia.")
