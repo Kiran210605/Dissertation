@@ -2,7 +2,14 @@ import streamlit as st
 import joblib
 import pandas as pd
 import numpy as np
+import os
 
+# Load Models and Preprocessors
+current_dir = os.path.dirname(__file__)
+
+models = joblib.load(os.path.join(current_dir, "best_models.pkl"))
+imputer = joblib.load(os.path.join(current_dir, "imputer.pkl"))
+scaler = joblib.load(os.path.join(current_dir, "scaler.pkl"))
 # Load Models and Preprocessors
 models = joblib.load("best_models.pkl")
 imputer = joblib.load("imputer.pkl")
